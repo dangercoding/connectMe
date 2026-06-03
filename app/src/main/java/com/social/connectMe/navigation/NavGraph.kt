@@ -8,13 +8,11 @@ import androidx.navigation.compose.composable
 import com.social.connectMe.ui.login.LoginScreen
 import com.social.connectMe.ui.settings.SettingsScreen
 import kotlinx.serialization.Serializable
+@Serializable
+data object LoginDestination
 
 @Serializable
-object LoginDestination
-
-@Serializable
-object SettingsDestination
-
+data object SettingsDestination
 @Composable
 fun SetupNavGraph(
     navController: NavHostController,

@@ -49,9 +49,11 @@ fun LoginScreen(
 ) {
     val state by viewModel.state.collectAsState()
 
+    // Lightweight white smooth color combination for a premium social feel
     val gradient = Brush.horizontalGradient(
-        colors = listOf(Color(0xFF8E5CF6), Color(0xFFE85D75))
+        colors = listOf(Color(0xFFFFFFFF), Color(0xFFF2F5F8))
     )
+    val onGradientColor = Color(0xFF0F1222) // High contrast color for elements on the white gradient
 
     Box(modifier = modifier.fillMaxSize().background(Color(0xFF0F1222))) {
         // Settings Button
@@ -78,7 +80,7 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(40.dp))
 
-            // Top Icon
+            // Top Icon Box
             Box(
                 modifier = Modifier
                     .size(70.dp)
@@ -88,7 +90,7 @@ fun LoginScreen(
                 Icon(
                     imageVector = Icons.Default.AccountBox,
                     contentDescription = null,
-                    tint = Color.White
+                    tint = onGradientColor
                 )
             }
 
@@ -182,7 +184,7 @@ fun LoginScreen(
                         .background(gradient),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("Sign In", color = Color.White, fontWeight = FontWeight.Bold)
+                    Text("Sign In", color = onGradientColor, fontWeight = FontWeight.Bold)
                 }
             }
 
