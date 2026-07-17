@@ -1,41 +1,69 @@
 package com.social.connectMe.ui.theme
 
-import android.app.Activity
-import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
+    primary = primaryDark,
+    onPrimary = onPrimaryDark,
+    primaryContainer = primaryContainerDark,
+    onPrimaryContainer = onPrimaryContainerDark,
+    secondary = secondaryDark,
+    onSecondary = onSecondaryDark,
+    secondaryContainer = secondaryContainerDark,
+    onSecondaryContainer = onSecondaryContainerDark,
+    tertiary = tertiaryDark,
+    onTertiary = onTertiaryDark,
+    tertiaryContainer = tertiaryContainerDark,
+    onTertiaryContainer = onTertiaryContainerDark,
+    background = backgroundDark,
+    onBackground = onBackgroundDark,
+    surface = surfaceDark,
+    onSurface = onSurfaceDark,
+    surfaceVariant = surfaceVariantDark,
+    onSurfaceVariant = onSurfaceVariantDark,
+    error = errorDark,
+    onError = onErrorDark,
+    errorContainer = errorContainerDark,
+    onErrorContainer = onErrorContainerDark
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Primary,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
-
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
+    primary = primary,
+    onPrimary = onPrimary,
+    primaryContainer = primary_Container,
+    onPrimaryContainer = onPrimary_Container,
+    secondary = secondary,
+    onSecondary = onSecondary,
+    secondaryContainer = secondary_Container,
+    onSecondaryContainer = onSecondary_Container,
+    tertiary = tertiary,
+    onTertiary = onTertiary,
+    tertiaryContainer = tertiary_Container,
+    onTertiaryContainer = onTertiary_Container,
+    background = background,
+    onBackground = onBackground,
+    surface = surface,
+    onSurface = onSurface,
+    surfaceVariant = surface_Variant,
+    onSurfaceVariant = onSurface_Variant,
+    error = error,
+    onError = onError,
+    errorContainer = error_Container,
+    onErrorContainer = onError_Container,
+    outline = outline,
+    outlineVariant = outline_Variant,
+    inverseOnSurface = inverse_On_Surface,
+    inverseSurface = inverse_Surface,
+    inversePrimary = inverse_Primary
 )
 
 @Composable
 fun ConnectMeTheme(
-    themeMode: ThemeMode,
+    themeMode: ThemeMode = ThemeMode.SYSTEM,
     content: @Composable () -> Unit
 ) {
     val darkTheme = when (themeMode) {
@@ -46,7 +74,7 @@ fun ConnectMeTheme(
 
     MaterialTheme(
         colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme,
-        //typography = AppTypography,
+        // typography = AppTypography,
         content = content
     )
 }

@@ -1,5 +1,6 @@
 package com.social.connectMe.ui.login
 
+import android.content.res.Resources
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,6 +25,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -53,15 +55,21 @@ fun LoginScreen(
     val gradient = Brush.horizontalGradient(
         colors = listOf(Color(0xFFFFFFFF), Color(0xFFF2F5F8))
     )
-    val onGradientColor = Color(0xFF0F1222) // High contrast color for elements on the white gradient
+    val onGradientColor =
+        Color(0xFF0F1222) // High contrast color for elements on the white gradient
 
-    Box(modifier = modifier.fillMaxSize().background(Color(0xFF0F1222))) {
+    Box(modifier = modifier
+        .fillMaxSize()
+        .background(gradient)) {
         // Settings Button
         IconButton(
             onClick = onNavigateToSettings,
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .padding(top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + 8.dp, end = 16.dp)
+                .padding(
+                    top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + 8.dp,
+                    end = 16.dp
+                )
         ) {
             Icon(
                 imageVector = Icons.Default.Settings,
@@ -84,7 +92,7 @@ fun LoginScreen(
             Box(
                 modifier = Modifier
                     .size(70.dp)
-                    .background(gradient, RoundedCornerShape(20.dp)),
+                    .background(Color(0xFF7B819A), RoundedCornerShape(20.dp)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -100,7 +108,7 @@ fun LoginScreen(
                 text = "Welcome back",
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.White
+                color =MaterialTheme.colorScheme.onSurface
             )
 
             Text(
