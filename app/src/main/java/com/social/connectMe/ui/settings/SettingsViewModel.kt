@@ -2,7 +2,8 @@ package com.social.connectMe.ui.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.social.connectMe.data.local.datastore.ThemePreferences
+import com.social.connectMe.domain.usecase.GetThemeUseCase
+import com.social.connectMe.domain.usecase.SaveThemeUseCase
 import com.social.connectMe.ui.theme.ThemeMode
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
@@ -14,10 +15,11 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val themePreferences: ThemePreferences
+    private val getThemeUseCase: GetThemeUseCase,
+    private val saveThemeUseCase: SaveThemeUseCase
 ) : ViewModel() {
 
-    val uiState: StateFlow<SettingsState> = themePreferences.themeMode
+    val uiState: StateFlow<SettingsState> = getThemeUseCase()
         .map { SettingsState(themeMode = it) }
         .stateIn(
             scope = viewModelScope,
@@ -25,10 +27,10 @@ class SettingsViewModel @Inject constructor(
             initialValue = SettingsState()
         )
 
-    fun toggleTheme(isNightMode: Boolean) {
+    fun onThemeChange(isNightMode: Boolean) {
         viewModelScope.launch {
             val newMode = if (isNightMode) ThemeMode.DARK else ThemeMode.LIGHT
-            themePreferences.saveTheme(newMode)
+            saveThemeUseCase(newMode)
         }
     }
 }

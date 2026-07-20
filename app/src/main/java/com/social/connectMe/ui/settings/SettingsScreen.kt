@@ -16,6 +16,11 @@ fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
+    
+    // Local state to make the switch feel more responsive while the theme updates in the background
+    var isNightModeLocal by remember(state.themeMode) {
+        mutableStateOf(state.themeMode == ThemeMode.DARK)
+    }
 
     Scaffold(
         modifier = modifier,
@@ -41,9 +46,10 @@ fun SettingsScreen(
                     modifier = Modifier.weight(1f)
                 )
                 Switch(
-                    checked = state.themeMode == ThemeMode.DARK,
+                    checked = isNightModeLocal,
                     onCheckedChange = { isNight ->
-                        viewModel.toggleTheme(isNight)
+                        isNightModeLocal = isNight
+                        viewModel.onThemeChange(isNight)
                     }
                 )
             }
