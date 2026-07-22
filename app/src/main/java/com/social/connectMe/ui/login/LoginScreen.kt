@@ -1,5 +1,6 @@
 package com.social.connectMe.ui.login
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -41,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.social.connectMe.core.components.textFieldColors
+import java.util.logging.Logger
 
 @Composable
 fun LoginScreen(
@@ -56,25 +58,29 @@ fun LoginScreen(
     )
     val onGradientColor = Color(0xFF0F1222)
 
-    Box(modifier = modifier
-        .fillMaxSize()
-        .background(gradient)) {
-        
-        IconButton(
-            onClick = onNavigateToSettings,
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(
-                    top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + 8.dp,
-                    end = 16.dp
-                )
-        ) {
-            Icon(
-                imageVector = Icons.Default.Settings,
-                contentDescription = "Settings",
-                tint = Color.Gray
-            )
-        }
+    Log.d("LoginScreen", "statusBars: ${WindowInsets.statusBars}")
+
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(gradient)
+    ) {
+
+//        IconButton(
+//            onClick = onNavigateToSettings,
+//            modifier = Modifier
+//                .align(Alignment.TopEnd)
+//                .padding(
+//                    top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + 8.dp,
+//                    end = 16.dp
+//                )
+//        ) {
+//            Icon(
+//                imageVector = Icons.Default.Settings,
+//                contentDescription = "Settings",
+//                tint = Color.Gray
+//            )
+//        }
 
         Column(
             modifier = Modifier
