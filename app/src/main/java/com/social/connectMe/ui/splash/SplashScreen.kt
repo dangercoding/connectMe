@@ -1,22 +1,20 @@
 package com.social.connectMe.ui.splash
 
-
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -29,11 +27,38 @@ fun SplashScreen(
     onNavigateToDashboard: () -> Unit,
     viewModel: SplashViewModel = hiltViewModel()
 ) {
-    LaunchedEffect(key1 = true) {
+
+    val scale = remember {
+        Animatable(0.5f)
+    }
+
+    LaunchedEffect(Unit) {
+        // Scale up to 1.2
+        scale.animateTo(
+            targetValue = 1.2f,
+            animationSpec = tween(
+                durationMillis = 1000,
+                easing = FastOutSlowInEasing
+            )
+        )
+        // Scale down to 1.0
+        scale.animateTo(
+            targetValue = 1.0f,
+            animationSpec = tween(
+                durationMillis = 800,
+                easing = FastOutSlowInEasing
+            )
+        )
+    }
+
+    LaunchedEffect(Unit) {
         viewModel.navigationEvent.collectLatest { event ->
             when (event) {
-                is SplashNavigationEvent.NavigateToLogin -> onNavigateToLogin()
-                is SplashNavigationEvent.NavigateToDashboard -> onNavigateToDashboard()
+                SplashNavigationEvent.NavigateToLogin ->
+                    onNavigateToLogin()
+
+                SplashNavigationEvent.NavigateToDashboard ->
+                    onNavigateToDashboard()
             }
         }
     }
@@ -41,17 +66,19 @@ fun SplashScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.onPrimary),
+            .background(MaterialTheme.colorScheme.background),
         contentAlignment = Alignment.Center
     ) {
 
         Image(
-            painter = painterResource(id = R.drawable.main_app_logo),
+            painter = painterResource(R.drawable.main_app_logo),
             contentDescription = "App Logo",
             modifier = Modifier
-                .size(260.dp)
-                .clip(CircleShape)
-
+                .size(220.dp)
+                .graphicsLayer {
+                    scaleX = scale.value
+                    scaleY = scale.value
+                }
         )
     }
 }

@@ -1,9 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
     <style name="Theme.ConnectMe" parent="android:Theme.Material.Light.NoActionBar">
-        <item name="android:statusBarColor">@color/navy_bg</item>
-        <item name="android:windowLightStatusBar">false</item>
-    </style>
+        <!-- Enable Edge-to-Edge by default -->
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
 
+        <!-- API 23+ attribute for dark status bar icons -->
+        <item name="android:windowLightStatusBar">true</item>
+
+        <!-- Match the app's background color exactly -->
+        <item name="android:windowBackground">#FAFBFC</item>
+    </style>
 </resources>
