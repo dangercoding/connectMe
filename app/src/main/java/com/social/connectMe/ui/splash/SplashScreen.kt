@@ -19,7 +19,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.social.connectMe.R
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 @Composable
 fun SplashScreen(
@@ -33,32 +35,27 @@ fun SplashScreen(
     }
 
     LaunchedEffect(Unit) {
-        // Scale up to 1.2
-        scale.animateTo(
-            targetValue = 1.2f,
-            animationSpec = tween(
-                durationMillis = 1000,
-                easing = FastOutSlowInEasing
+        launch {
+            scale.animateTo(
+                targetValue = 1.2f,
+                animationSpec = tween(1000)
             )
-        )
-        // Scale down to 1.0
-        scale.animateTo(
-            targetValue = 1.0f,
-            animationSpec = tween(
-                durationMillis = 800,
-                easing = FastOutSlowInEasing
+
+            scale.animateTo(
+                targetValue = 1.0f,
+                animationSpec = tween(800)
             )
-        )
-    }
+        }
 
-    LaunchedEffect(Unit) {
-        viewModel.navigationEvent.collectLatest { event ->
-            when (event) {
-                SplashNavigationEvent.NavigateToLogin ->
-                    onNavigateToLogin()
+        launch {
+            viewModel.navigationEvent.collectLatest { event ->
+                when (event) {
+                    SplashNavigationEvent.NavigateToLogin ->
+                        onNavigateToLogin()
 
-                SplashNavigationEvent.NavigateToDashboard ->
-                    onNavigateToDashboard()
+                    SplashNavigationEvent.NavigateToDashboard ->
+                        onNavigateToDashboard()
+                }
             }
         }
     }
