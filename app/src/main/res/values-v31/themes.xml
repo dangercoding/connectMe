@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.ConnectMe" parent="android:Theme.Material.Light.NoActionBar">
+        <!-- 1. Make system bars transparent to match enableEdgeToEdge() immediately -->
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+
+        <!-- 2. Dark icons for the light background -->
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+
+        <!-- 3. Match the window background to your app's actual background (#FAFBFC) -->
+        <!-- This is critical to prevent the "white flash" before your Compose UI renders -->
+        <item name="android:windowBackground">#FAFBFC</item>
+
+        <!-- Native Splash Screen attributes (API 31+) -->
+        <item name="android:windowSplashScreenBackground">#FAFBFC</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/main_app_logo</item>
+    </style>
+</resources>
