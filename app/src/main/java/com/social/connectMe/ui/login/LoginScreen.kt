@@ -3,9 +3,10 @@ package com.social.connectMe.ui.login
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -16,13 +17,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -31,6 +29,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -44,16 +43,12 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.R
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.social.connectMe.core.components.textFieldColors
-import com.social.connectMe.ui.theme.ThemeMode
-import java.util.logging.Logger
 
 @Composable
 fun LoginScreen(
     modifier: Modifier = Modifier,
-    onNavigateToSettings: () -> Unit = {},
     onLoginSuccess: () -> Unit = {},
     viewModel: LoginViewModel = hiltViewModel()
 ) {
@@ -62,7 +57,13 @@ fun LoginScreen(
     val gradient = Brush.horizontalGradient(
         colors = listOf(Color(0xFFFFFFFF), Color(0xFFF2F5F8))
     )
-    Color(0xFF0F1222)
+
+    // Trigger navigation when login is successful
+    LaunchedEffect(state.isSuccessful) {
+        if (state.isSuccessful) {
+            onLoginSuccess()
+        }
+    }
 
     Log.d("LoginScreen", "statusBars: ${WindowInsets.statusBars}")
 
@@ -71,23 +72,43 @@ fun LoginScreen(
             .fillMaxSize()
             .background(gradient)
     ) {
-
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(WindowInsets.statusBars.asPaddingValues())
-                .padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Top
         ) {
 
             Spacer(modifier = Modifier.height(40.dp))
 
-            Image(
-                painter = painterResource(com.social.connectMe.R.drawable.login_logo),
-                contentDescription = "App Logo",
-                modifier = Modifier.size(200.dp),
-                contentScale = ContentScale.Inside
-            )
+            Box(
+                modifier = Modifier
+                    .size(160.dp)
+                    .border(
+                        width = 2.dp,
+                        color = Color.Transparent,
+                        shape = RoundedCornerShape(20.dp)
+                    )
+            ) {
+
+                Image(
+                    painter = painterResource(com.social.connectMe.R.drawable.login_logo),
+                    contentDescription = "App Logo",
+                    modifier = Modifier
+                        .size(160.dp)
+                        .background(Color.Transparent)
+                        .border(
+                            width = 2.dp,
+                            color = Color.Transparent,
+                            shape = RoundedCornerShape(20.dp)
+                        ),
+                    contentScale = ContentScale.Fit,
+                )
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
 
             Text(
                 text = "Welcome back",
@@ -139,17 +160,21 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(20.dp))
 
             Button(
-                onClick = onLoginSuccess, // For now, just navigate on click
+                onClick = { viewModel.onLoginClick() },
+                enabled = !state.isLoading,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(55.dp),
                 shape = RoundedCornerShape(20.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
             ) {
-                Text("Sign In", fontWeight = FontWeight.Bold)
+                Text(
+                    text = if (state.isLoading) "Loading..." else "Sign In",
+                    fontWeight = FontWeight.Bold
+                )
             }
 
-            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(24.dp))
 
             Row {
                 Text("Don't have an account? ", color = Color.Gray)

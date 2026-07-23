@@ -50,9 +50,6 @@ fun SetupNavGraph(
 
         composable<LoginDestination> {
             LoginScreen(
-                onNavigateToSettings = {
-                    navController.navigate(SettingsDestination)
-                },
                 onLoginSuccess = {
                     navController.navigate(DashboardDestination) {
                         popUpTo(LoginDestination) { inclusive = true }
