@@ -1,7 +1,9 @@
 package com.social.connectMe.di
 
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
+import com.social.connectMe.core.utils.Constants
 import com.social.connectMe.data.remote.AuthApiService
+import com.social.connectMe.data.remote.AuthInterceptor
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -19,6 +21,10 @@ object NetworkModule {
 
     @Provides
     @Singleton
+    fun provideBaseUrl(): String = Constants.BASE_URL
+
+    @Provides
+    @Singleton
     fun provideJson(): Json {
         return Json {
             ignoreUnknownKeys = true
@@ -28,20 +34,25 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideOkHttpClient(): OkHttpClient {
+    fun provideOkHttpClient(authInterceptor: AuthInterceptor): OkHttpClient {
         return OkHttpClient.Builder()
             .addInterceptor(HttpLoggingInterceptor().apply {
                 level = HttpLoggingInterceptor.Level.BODY
             })
+            .addInterceptor(authInterceptor)
             .build()
     }
 
     @Provides
     @Singleton
-    fun provideAuthApiService(okHttpClient: OkHttpClient, json: Json): AuthApiService {
+    fun provideAuthApiService(
+        okHttpClient: OkHttpClient,
+        json: Json,
+        baseUrl: String
+    ): AuthApiService {
         val contentType = "application/json".toMediaType()
         return Retrofit.Builder()
-            .baseUrl(AuthApiService.BASE_URL)
+            .baseUrl(baseUrl)
             .client(okHttpClient)
             .addConverterFactory(json.asConverterFactory(contentType))
             .build()

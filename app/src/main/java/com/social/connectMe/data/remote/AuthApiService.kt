@@ -10,8 +10,4 @@ interface AuthApiService {
     suspend fun login(
         @Body request: LoginRequest
     ): UserDto
-
-    companion object {
-        const val BASE_URL = "https://api.example.com/"
-    }
 }
