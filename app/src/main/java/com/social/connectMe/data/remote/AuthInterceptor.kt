@@ -13,10 +13,12 @@ class AuthInterceptor @Inject constructor(
     override fun intercept(chain: Interceptor.Chain): Response {
         val request = chain.request()
         
-        // Skip adding token for login and signup endpoints
-        if (request.url.encodedPath.contains("login") || 
-            request.url.encodedPath.contains("signup")) {
-            return chain.proceed(request)
+        // Skip adding token if the request has the "No-Authentication" header
+        if (request.header("No-Authentication") != null) {
+            val newRequest = request.newBuilder()
+                .removeHeader("No-Authentication")
+                .build()
+            return chain.proceed(newRequest)
         }
 
         val token = runBlocking {
