@@ -50,7 +50,7 @@ class LoginViewModel @Inject constructor(
                     it.copy(
                         isLoading = false,
                         isLoggedIn = true,
-                        isSuccessful = true
+                        isSuccessful = true,
                     ) 
                 }
                 _eventFlow.emit(LoginUiEvent.LoginSuccess)

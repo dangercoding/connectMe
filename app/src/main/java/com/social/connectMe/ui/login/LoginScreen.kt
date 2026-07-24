@@ -28,7 +28,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -48,6 +47,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.social.connectMe.core.components.ConnectMeSnackbarHost
 import com.social.connectMe.core.components.textFieldColors
 import kotlinx.coroutines.flow.collectLatest
 
@@ -58,7 +58,7 @@ fun LoginScreen(
     viewModel: LoginViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
-    val snackbarHostState = remember { SnackbarHostState() }
+    val snackBarHostState = remember { SnackbarHostState() }
 
     val gradient = Brush.horizontalGradient(
         colors = listOf(Color(0xFFFFFFFF), Color(0xFFF2F5F8))
@@ -70,8 +70,9 @@ fun LoginScreen(
                 is LoginUiEvent.LoginSuccess -> {
                     onLoginSuccess()
                 }
+
                 is LoginUiEvent.ShowSnackbar -> {
-                    snackbarHostState.showSnackbar(
+                    snackBarHostState.showSnackbar(
                         message = event.message
                     )
                 }
@@ -80,7 +81,7 @@ fun LoginScreen(
     }
 
     Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) },
+        snackbarHost = { ConnectMeSnackbarHost(snackBarHostState) },
         modifier = modifier.fillMaxSize()
     ) { paddingValues ->
         Box(
