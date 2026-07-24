@@ -5,7 +5,9 @@ import androidx.lifecycle.viewModelScope
 import com.social.connectMe.domain.usecase.LoginUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -18,6 +20,9 @@ class LoginViewModel @Inject constructor(
 
     private val _state = MutableStateFlow(LoginState())
     val state = _state.asStateFlow()
+
+    private val _eventFlow = MutableSharedFlow<LoginUiEvent>()
+    val eventFlow = _eventFlow.asSharedFlow()
 
     fun onEmailChange(email: String) {
         _state.update { it.copy(email = email, error = null) }
@@ -34,7 +39,7 @@ class LoginViewModel @Inject constructor(
     fun onLoginClick() {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
-            delay(5)
+            
             val result = loginUseCase(
                 email = state.value.email,
                 password = state.value.password
@@ -48,14 +53,22 @@ class LoginViewModel @Inject constructor(
                         isSuccessful = true
                     ) 
                 }
+                _eventFlow.emit(LoginUiEvent.LoginSuccess)
             }.onFailure { exception ->
+                val errorMessage = exception.message ?: "An unknown error occurred"
                 _state.update { 
                     it.copy(
                         isLoading = false,
-                        error = exception.message ?: "An unknown error occurred"
+                        error = errorMessage
                     ) 
                 }
+                _eventFlow.emit(LoginUiEvent.ShowSnackbar(errorMessage))
             }
         }
     }
+}
+
+sealed class LoginUiEvent {
+    data class ShowSnackbar(val message: String) : LoginUiEvent()
+    object LoginSuccess : LoginUiEvent()
 }

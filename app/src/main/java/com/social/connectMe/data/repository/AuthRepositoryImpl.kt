@@ -3,6 +3,7 @@ package com.social.connectMe.data.repository
 import com.social.connectMe.data.local.datastore.UserPreferences
 import com.social.connectMe.data.remote.AuthApiService
 import com.social.connectMe.data.remote.dto.LoginRequest
+import com.social.connectMe.data.remote.dto.UserDto
 import com.social.connectMe.data.remote.dto.toDomain
 import com.social.connectMe.domain.model.User
 import com.social.connectMe.domain.repository.AuthRepository
@@ -16,12 +17,15 @@ class AuthRepositoryImpl @Inject constructor(
 
     override suspend fun login(email: String, password: String): Result<User> {
         return try {
-            var response = apiService.login(LoginRequest(email, password))
-            response.apply {
-                token="AHDGGFYEEEBF_DWUW_8873737"
-                name="John Doe"
-                id="123456789"
-            }
+            val response = apiService.login(LoginRequest(email, password))
+
+// TODO:: Need to remove hard coded values
+//          val response= UserDto(
+//                token="AHDGGFYEEEBF_DWUW_8873737",
+//                name="John Doe",
+//                id="123456789",
+//              email = email
+//              )
             Result.success(response.toDomain())
         } catch (e: Exception) {
             Result.failure(e)
