@@ -1,9 +1,9 @@
 package com.social.connectMe.ui.dashboard
 
 import android.Manifest
-import android.content.pm.PackageManager
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
+import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -22,15 +22,15 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.social.connectMe.ui.components.PermissionHandler
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,39 +41,19 @@ fun DashboardScreen(
     val state by viewModel.state.collectAsState()
     val context = LocalContext.current
 
-    val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissions ->
-        if (permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
-            permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
-        ) {
-            viewModel.observeLocationUpdates()
-        }
-    }
-
-    LaunchedEffect(Unit) {
-        val fineLocationPermission = ContextCompat.checkSelfPermission(
-            context,
-            Manifest.permission.ACCESS_FINE_LOCATION
-        )
-        val coarseLocationPermission = ContextCompat.checkSelfPermission(
-            context,
+    PermissionHandler(
+        permissions = arrayOf(
+            Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.ACCESS_COARSE_LOCATION
-        )
-
-        if (fineLocationPermission == PackageManager.PERMISSION_GRANTED ||
-            coarseLocationPermission == PackageManager.PERMISSION_GRANTED
-        ) {
+        ),
+        delayMillis = 3000L,
+        onPermissionGranted = {
             viewModel.observeLocationUpdates()
-        } else {
-            permissionLauncher.launch(
-                arrayOf(
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-                )
-            )
+        },
+        onPermissionDenied = {
+            viewModel.onPermissionDenied()
         }
-    }
+    )
 
     Scaffold(
         topBar = {
@@ -104,17 +84,50 @@ fun DashboardScreen(
             )
             Spacer(modifier = Modifier.height(24.dp))
 
-            LocationInfo(
-                latitude = state.latitude,
-                longitude = state.longitude,
-                error = state.locationError
-            )
+            if (state.isPermissionDenied) {
+                PermissionDeniedContent(onOpenSettings = {
+                    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                        data = Uri.fromParts("package", context.packageName, null)
+                    }
+                    context.startActivity(intent)
+                })
+            } else {
+                LocationInfo(
+                    latitude = state.latitude,
+                    longitude = state.longitude,
+                    error = state.locationError
+                )
 
-            Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
-            Button(onClick = { viewModel.refreshLocation() }) {
-                Text("Refresh Location")
+                Button(onClick = { viewModel.refreshLocation() }) {
+                    Text("Refresh Location")
+                }
             }
+        }
+    }
+}
+
+@Composable
+fun PermissionDeniedContent(onOpenSettings: () -> Unit) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.padding(16.dp)
+    ) {
+        Text(
+            text = "Location Permission Denied",
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.error
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "We need location permission to show your current position. Please enable it in settings.",
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.bodyMedium
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(onClick = onOpenSettings) {
+            Text("Open Settings")
         }
     }
 }
