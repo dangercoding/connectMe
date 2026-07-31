@@ -6,7 +6,9 @@ import com.social.connectMe.data.remote.dto.LoginRequest
 import com.social.connectMe.data.remote.dto.toDomain
 import com.social.connectMe.domain.model.User
 import com.social.connectMe.domain.repository.AuthRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOn
 import javax.inject.Inject
 
 class AuthRepositoryImpl @Inject constructor(
@@ -31,5 +33,5 @@ class AuthRepositoryImpl @Inject constructor(
         userPreferences.clearUser()
     }
 
-    override val isLoggedIn: Flow<Boolean> = userPreferences.isLoggedIn
+    override val isLoggedIn: Flow<Boolean> = userPreferences.isLoggedIn.flowOn(Dispatchers.IO)
 }

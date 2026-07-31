@@ -25,14 +25,16 @@ class SplashViewModel @Inject constructor(
             // Optimization: Fetch login status and run splash timer in parallel.
             // Using .first() ensures we wait for the real value from DataStore,
             // eliminating race conditions where .value might return initialValue prematurely.
-            val isLoggedInDeferred = async { authRepository.isLoggedIn.first() }
-            
+            val isLoggedInDeferred = async {
+                authRepository.isLoggedIn.first()
+            }
+
             // Branding delay
             val timerDeferred = async { delay(2000) }
 
             val isLoggedIn = isLoggedInDeferred.await()
             timerDeferred.await()
-            
+
             val destination = if (isLoggedIn) {
                 SplashNavigationEvent.NavigateToDashboard
             } else {
