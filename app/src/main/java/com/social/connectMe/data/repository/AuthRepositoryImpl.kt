@@ -6,7 +6,9 @@ import com.social.connectMe.data.remote.dto.LoginRequest
 import com.social.connectMe.data.remote.dto.toDomain
 import com.social.connectMe.domain.model.User
 import com.social.connectMe.domain.repository.AuthRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOn
 import javax.inject.Inject
 
 class AuthRepositoryImpl @Inject constructor(
@@ -16,12 +18,7 @@ class AuthRepositoryImpl @Inject constructor(
 
     override suspend fun login(email: String, password: String): Result<User> {
         return try {
-            var response = apiService.login(LoginRequest(email, password))
-            response.apply {
-                token="AHDGGFYEEEBF_DWUW_8873737"
-                name="John Doe"
-                id="123456789"
-            }
+            val response = apiService.login(LoginRequest(email, password))
             Result.success(response.toDomain())
         } catch (e: Exception) {
             Result.failure(e)
@@ -36,5 +33,5 @@ class AuthRepositoryImpl @Inject constructor(
         userPreferences.clearUser()
     }
 
-    override val isLoggedIn: Flow<Boolean> = userPreferences.isLoggedIn
+    override val isLoggedIn: Flow<Boolean> = userPreferences.isLoggedIn.flowOn(Dispatchers.IO)
 }

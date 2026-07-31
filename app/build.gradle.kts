@@ -82,4 +82,7 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     implementation(libs.accompanist.systemuicontroller)
     implementation("androidx.datastore:datastore-preferences:1.2.1")
+    
+    // Location
+    implementation(libs.play.services.location)
 }
