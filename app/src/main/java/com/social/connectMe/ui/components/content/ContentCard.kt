@@ -11,6 +11,9 @@ fun ContentCard() {
         modifier = Modifier.fillMaxWidth()
     ) {
         ContentProfileSection()
+        ContentPostSection()
+        ContentImageSection()
+        ContentBottomSection()
 
     }
 }

@@ -157,6 +157,7 @@ fun DashboardScreen(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
+                .padding(paddingValues)
                 .background(
                     MaterialTheme.colorScheme.background
                 )
