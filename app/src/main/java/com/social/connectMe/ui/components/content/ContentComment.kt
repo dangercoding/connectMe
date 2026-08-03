@@ -19,18 +19,21 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.tooling.preview.Preview
 
 @Composable
 fun ContentComment(
     username: String,
-    comment: String
+    comment: String,
+    modifier: Modifier = Modifier
 ) {
-    var expanded by remember { mutableStateOf(false) }
-    var isTruncated by remember { mutableStateOf(false) }
+    // Reset state when content changes (important for lists)
+    var expanded by remember(username, comment) { mutableStateOf(false) }
+    var isTruncated by remember(username, comment) { mutableStateOf(false) }
 
     Row(
-        modifier = Modifier
-            .padding(start = 11.dp, end = 1.dp, top = 0.dp, bottom = 5.dp)
+        modifier = modifier
+            .padding(horizontal = 11.dp, vertical = 2.dp)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null
@@ -43,6 +46,7 @@ fun ContentComment(
     ) {
         Text(
             text = buildAnnotatedString {
+                // Bold Username
                 withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
                     append(username)
                 }
@@ -63,9 +67,11 @@ fun ContentComment(
                     isTruncated = textLayoutResult.hasVisualOverflow
                 }
             },
+            // weight(1f, fill = false) allows the main text to elide 
+            // while giving priority and space to the "more" label.
             modifier = Modifier.weight(1f, fill = false)
         )
-
+        
         if (isTruncated && !expanded) {
             Text(
                 text = " more",
@@ -74,4 +80,13 @@ fun ContentComment(
             )
         }
     }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
+@Composable
+private fun ContentCommentPreview() {
+    ContentComment(
+        username = "pitabash",
+        comment = "This is a long comment that should definitely exceed the single line threshold and show the more option for testing purposes."
+    )
 }
