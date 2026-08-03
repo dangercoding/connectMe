@@ -1,29 +1,20 @@
 package com.social.connectMe.ui.dashboard
 
 import android.Manifest
-import android.annotation.SuppressLint
-import android.content.Intent
-import android.net.Uri
-import android.provider.Settings
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -33,13 +24,15 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarColors
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -57,17 +50,23 @@ fun DashboardScreen(
 
     PermissionHandler(
         permissions = arrayOf(
-        Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION
-    ), delayMillis = 3000L, onPermissionGranted = {
-        viewModel.observeLocationUpdates()
-    }, onPermissionDenied = {
-        viewModel.onPermissionDenied()
-    })
+            Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION
+        ), delayMillis = 3000L, onPermissionGranted = {
+            viewModel.observeLocationUpdates()
+        }, onPermissionDenied = {
+            viewModel.onPermissionDenied()
+        })
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(
+        rememberTopAppBarState()
+    )
 
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background, topBar = {
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        containerColor = MaterialTheme.colorScheme.background,
+        topBar = {
 
             TopAppBar(
+                scrollBehavior = scrollBehavior,
                 colors = TopAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background,
                     scrolledContainerColor = Color.Transparent,
@@ -109,7 +108,8 @@ fun DashboardScreen(
                     }
                 },
             )
-        }) { paddingValues ->
+        },
+    ) { paddingValues ->
 
 // start of comment
 //        Column(
@@ -161,12 +161,12 @@ fun DashboardScreen(
                 .background(
                     MaterialTheme.colorScheme.background
                 )
-               // .padding(paddingValues)
+                // .padding(paddingValues)
                 .padding(0.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            repeat(50){
+            repeat(50) {
                 item {
                     ContentCard()
                     Spacer(modifier = Modifier.height(24.dp))
