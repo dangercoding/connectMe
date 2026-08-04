@@ -19,7 +19,9 @@ import com.social.connectMe.R
 import com.social.connectMe.ui.components.buttons.ButtonWithLabel
 
 @Composable
-fun ContentBottomSection() {
+fun ContentBottomSection(
+    id: Int
+) {
 
     Column(
         modifier = Modifier
@@ -36,7 +38,7 @@ fun ContentBottomSection() {
             ButtonWithLabel("150", painterResource(R.drawable.like_outline_button))
         }
 
-        ContentComment(
+        ContentComment(id,
             "Pitabash1998","ing Lorem Ipsum is that it has a more-or-less normal distribution of letters, as opposed to using 'Content here, content here', making it look like readable English. Many desktop publishing packages and web page editors now use Lorem Ipsum as their default model text, and a search for 'lorem ipsum' will uncover many web sites still in thei",
         )
     }

@@ -12,10 +12,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -64,7 +66,6 @@ fun DashboardScreen(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-
             TopAppBar(
                 scrollBehavior = scrollBehavior,
                 colors = TopAppBarColors(
@@ -81,12 +82,10 @@ fun DashboardScreen(
                             .background(Color.Transparent),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Absolute.SpaceBetween,
-
-                        ) {
+                    ) {
                         Icon(
-                            Icons.Default.Add, contentDescription = "Add Content", tint = Color(
-                                0xFF000000
-                            ), modifier = Modifier.size(30.dp)
+                            Icons.Default.Add, contentDescription = "Add Content", tint = Color.Black,
+                            modifier = Modifier.size(30.dp)
                         )
 
                         Text(
@@ -99,9 +98,7 @@ fun DashboardScreen(
                             Icon(
                                 Icons.Default.FavoriteBorder,
                                 contentDescription = "notification",
-                                tint = Color(
-                                    0xFF000000
-                                ),
+                                tint = Color.Black,
                                 modifier = Modifier.size(25.dp)
                             )
                         }
@@ -110,71 +107,55 @@ fun DashboardScreen(
             )
         },
     ) { paddingValues ->
-
-// start of comment
-//        Column(
-//            modifier = Modifier
-//                .fillMaxSize()
-//                .background(
-//                    MaterialTheme.colorScheme.background
-//                )
-//                .padding(paddingValues)
-//                .padding(16.dp),
-//            horizontalAlignment = Alignment.CenterHorizontally,
-//            verticalArrangement = Arrangement.Center
-//        ) {
-//            Text(
-//                text = state.welcomeMessage, style = MaterialTheme.typography.headlineMedium
-//            )
-//            Spacer(modifier = Modifier.height(24.dp))
-//
-//            if (state.isPermissionDenied) {
-//                PermissionDeniedContent(onOpenSettings = {
-//                    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-//                        data = Uri.fromParts("package", context.packageName, null)
-//                    }
-//                    context.startActivity(intent)
-//                })
-//            } else {
-//                LocationInfo(
-//                    latitude = state.latitude,
-//                    longitude = state.longitude,
-//                    error = state.locationError
-//                )
-//
-//                Spacer(modifier = Modifier.height(16.dp))
-//
-//                Button(onClick = { viewModel.refreshLocation() }) {
-//                    Text("Refresh Location")
-//                }
-//            }
-//        }
-
-
-        // end of it
-
-
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(
-                    MaterialTheme.colorScheme.background
-                )
-                // .padding(paddingValues)
-                .padding(0.dp),
+                .background(MaterialTheme.colorScheme.background),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-
-            repeat(50) {
-                item {
-                    ContentCard()
-                    Spacer(modifier = Modifier.height(24.dp))
+            // Using itemsIndexed for cleaner pagination trigger
+            itemsIndexed(
+                items = state.items,
+                key = { _, id -> id } // Providing a key improves performance
+            ) { index, id ->
+                
+                // Trigger pagination: load more when the user is near the end
+                // We check if the current index is the last one in the current list
+                if (index >= state.items.size - 1 && !state.isLoading && !state.endReached) {
+                    viewModel.loadNextItems()
                 }
-
+                
+                ContentCard(id)
+                
+                // Spacing between cards
+                Spacer(modifier = Modifier.height(16.dp))
             }
 
-
+            // Show loading spinner at the bottom while fetching next page
+            if (state.isLoading) {
+                item {
+                    CircularProgressIndicator(
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .size(32.dp),
+                        strokeWidth = 3.dp,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+            
+            // Optional: Show a message when all items are loaded
+            if (state.endReached && state.items.isNotEmpty()) {
+                item {
+                    Text(
+                        text = "You've seen all posts",
+                        modifier = Modifier.padding(16.dp),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.Gray
+                    )
+                }
+            }
         }
     }
 }

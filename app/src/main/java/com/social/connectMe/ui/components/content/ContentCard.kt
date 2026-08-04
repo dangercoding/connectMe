@@ -6,14 +6,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 
 @Composable
-fun ContentCard() {
+fun ContentCard(
+     id: Int
+) {
     Column(
         modifier = Modifier.fillMaxWidth()
     ) {
         ContentProfileSection()
         ContentPostSection()
         ContentImageSection()
-        ContentBottomSection()
+        ContentBottomSection(id)
 
     }
 }

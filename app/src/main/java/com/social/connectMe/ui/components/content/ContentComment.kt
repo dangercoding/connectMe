@@ -23,6 +23,7 @@ import androidx.compose.ui.tooling.preview.Preview
 
 @Composable
 fun ContentComment(
+    id: Int,
     username: String,
     comment: String,
     modifier: Modifier = Modifier
@@ -86,6 +87,7 @@ fun ContentComment(
 @Composable
 private fun ContentCommentPreview() {
     ContentComment(
+        1,
         username = "pitabash",
         comment = "This is a long comment that should definitely exceed the single line threshold and show the more option for testing purposes."
     )

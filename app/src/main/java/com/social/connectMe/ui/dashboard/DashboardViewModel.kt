@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.social.connectMe.domain.repository.LocationRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
@@ -22,6 +23,11 @@ class DashboardViewModel @Inject constructor(
     val state = _state.asStateFlow()
 
     private var isObservingLocation = false
+
+    init {
+        // Initial load
+        loadNextItems()
+    }
 
     @OptIn(FlowPreview::class)
     fun observeLocationUpdates(intervalMillis: Long = 10L) {
@@ -44,6 +50,30 @@ class DashboardViewModel @Inject constructor(
 
     fun onPermissionDenied() {
         _state.update { it.copy(isPermissionDenied = true) }
+    }
+
+    fun loadNextItems() {
+        if (_state.value.isLoading || _state.value.endReached) return
+
+        viewModelScope.launch {
+            _state.update { it.copy(isLoading = true) }
+            
+            // Simulate network delay for fetching data
+            delay(1500)
+
+            val currentSize = _state.value.items.size
+            val pageSize = 10
+            val nextItems = (currentSize until currentSize + pageSize).toList()
+            
+            // For demo purposes, we stop at 100 items
+            val endReached = currentSize + pageSize >= 100
+
+            _state.update { it.copy(
+                items = it.items + nextItems,
+                isLoading = false,
+                endReached = endReached
+            ) }
+        }
     }
 
     fun refreshLocation() {
@@ -69,5 +99,8 @@ data class DashboardState(
     val latitude: Double? = null,
     val longitude: Double? = null,
     val locationError: String? = null,
-    val isPermissionDenied: Boolean = false
+    val isPermissionDenied: Boolean = false,
+    val items: List<Int> = emptyList(),
+    val isLoading: Boolean = false,
+    val endReached: Boolean = false
 )
