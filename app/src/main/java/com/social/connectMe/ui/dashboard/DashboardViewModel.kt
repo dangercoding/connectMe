@@ -59,7 +59,7 @@ class DashboardViewModel @Inject constructor(
             _state.update { it.copy(isLoading = true) }
             
             // Simulate network delay for fetching data
-            delay(1500)
+            delay(5500)
 
             val currentSize = _state.value.items.size
             val pageSize = 10

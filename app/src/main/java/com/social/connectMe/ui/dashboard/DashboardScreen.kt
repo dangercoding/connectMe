@@ -1,6 +1,7 @@
 package com.social.connectMe.ui.dashboard
 
 import android.Manifest
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -31,16 +32,63 @@ import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.social.connectMe.ui.components.PermissionHandler
 import com.social.connectMe.ui.components.content.ContentCard
+
+class GenericScrollConnection(
+    private val onScrollUp: () -> Unit = {},
+    private val onScrollDown: () -> Unit = {},
+    private val onScrollStarted: () -> Unit = {},
+    private val onScrollStopped: () -> Unit = {}
+) : NestedScrollConnection {
+
+    private var isScrolling = false
+
+    override fun onPreScroll(
+        available: Offset,
+        source: NestedScrollSource
+    ): Offset {
+
+        if (!isScrolling) {
+            isScrolling = true
+            onScrollStarted()
+        }
+
+        when {
+            available.y < 0 -> onScrollUp()
+            available.y > 0 -> onScrollDown()
+        }
+
+        return Offset.Zero
+    }
+
+    override suspend fun onPostFling(
+        consumed: Velocity,
+        available: Velocity
+    ): Velocity {
+
+        isScrolling = false
+        onScrollStopped()
+
+        return Velocity.Zero
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,6 +97,9 @@ fun DashboardScreen(
 ) {
     val state by viewModel.state.collectAsState()
     val context = LocalContext.current
+    
+    // Flag to ensure the toast message is shown only once
+    var hasShownScrollToast by rememberSaveable { mutableStateOf(false) }
 
     PermissionHandler(
         permissions = arrayOf(
@@ -58,12 +109,28 @@ fun DashboardScreen(
         }, onPermissionDenied = {
             viewModel.onPermissionDenied()
         })
+    
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(
         rememberTopAppBarState()
     )
 
+    val nestedScrollConnection = remember {
+        GenericScrollConnection(
+            onScrollStarted = {
+                if (!hasShownScrollToast) {
+                    Toast.makeText(context, "Scrolled", Toast.LENGTH_SHORT).show()
+                    hasShownScrollToast = true
+                }
+            },
+            onScrollUp = {
+                // available.y < 0 means user is scrolling down (content moves up)
+                viewModel.loadNextItems()
+            }
+        )
+    }
+
     Scaffold(
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        modifier = Modifier.nestedScroll(nestedScrollConnection),
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
