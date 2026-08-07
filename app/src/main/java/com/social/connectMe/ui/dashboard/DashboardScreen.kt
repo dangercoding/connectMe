@@ -1,6 +1,9 @@
 package com.social.connectMe.ui.dashboard
 
 import android.Manifest
+import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -10,12 +13,16 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
@@ -53,54 +60,10 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.social.connectMe.core.components.GenericScrollConnection
 import com.social.connectMe.ui.components.PermissionHandler
 import com.social.connectMe.ui.components.content.ContentCard
 import kotlin.math.roundToInt
-
-/**
- * Custom NestedScrollConnection to handle scroll events and trigger callbacks.
- */
-class GenericScrollConnection(
-    private val onScrollUp: (delta: Float) -> Unit = {},
-    private val onScrollDown: (delta: Float) -> Unit = {},
-    private val onScrollStarted: () -> Unit = {},
-    private val onScrollStopped: () -> Unit = {}
-) : NestedScrollConnection {
-
-    private var isScrolling = false
-
-    override fun onPreScroll(
-        available: Offset,
-        source: NestedScrollSource
-    ): Offset {
-        // available.y < 0: Scrolling down (content moves up)
-        // available.y > 0: Scrolling up (content moves down)
-
-        if (!isScrolling && available.y != 0f) {
-            isScrolling = true
-            onScrollStarted()
-        }
-
-        if (available.y < 0) {
-            onScrollUp(available.y)
-        } else if (available.y > 0) {
-            onScrollDown(available.y)
-        }
-
-        return Offset.Zero
-    }
-
-    override suspend fun onPostFling(
-        consumed: Velocity,
-        available: Velocity
-    ): Velocity {
-        if (isScrolling) {
-            isScrolling = false
-            onScrollStopped()
-        }
-        return Velocity.Zero
-    }
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -111,8 +74,8 @@ fun DashboardScreen(
     val state by viewModel.state.collectAsState()
     val context = LocalContext.current
     val density = LocalDensity.current
-    
-    // Track if the one-time scroll toast has been shown
+
+    // Flag to ensure the toast message is shown only once per session
     var hasShownScrollToast by rememberSaveable { mutableStateOf(false) }
 
     PermissionHandler(
@@ -128,13 +91,17 @@ fun DashboardScreen(
             viewModel.onPermissionDenied()
         }
     )
-    
-    // Manual toolbar setup
+
+    // Manual toolbar setup with status bar awareness and reduced breathing room
+    val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val extraTopPadding = 8.dp // Reduced gap from top notch area
     val toolbarHeight = 64.dp
-    val toolbarHeightPx = with(density) { toolbarHeight.toPx() }
+    
+    // Total height of the top assembly that needs to hide fully (Bar + Safe Area + Margin)
+    val totalToolbarHeightPx = with(density) { (toolbarHeight + statusBarHeight + extraTopPadding).toPx() }
     var toolbarOffsetHeightPx by remember { mutableFloatStateOf(0f) }
 
-    val nestedScrollConnection = remember {
+    val nestedScrollConnection = remember(totalToolbarHeightPx) {
         GenericScrollConnection(
             onScrollStarted = {
                 if (!hasShownScrollToast) {
@@ -142,18 +109,20 @@ fun DashboardScreen(
                     hasShownScrollToast = true
                 }
             },
-            onScrollUp = { delta ->
-                // User is scrolling down the list
-                toolbarOffsetHeightPx = (toolbarOffsetHeightPx + delta).coerceIn(-toolbarHeightPx, 0f)
+            onScroll = { delta: Float ->
+                val oldOffset = toolbarOffsetHeightPx
+                val newOffset = oldOffset + delta
                 
-                // Pagination trigger logic
-                if (delta < -10 && !state.isLoading && !state.endReached) {
+                // Coerce offset within [-totalHeight, 0] to ensure the entire top area can hide
+                toolbarOffsetHeightPx = newOffset.coerceIn(-totalToolbarHeightPx, 0f)
+                val consumed = toolbarOffsetHeightPx - oldOffset
+
+                // Trigger pagination logic if scrolling down significantly
+                if (delta < -10f && !state.isLoading && !state.endReached) {
                     viewModel.loadNextItems()
                 }
-            },
-            onScrollDown = { delta ->
-                // User is scrolling up the list
-                toolbarOffsetHeightPx = (toolbarOffsetHeightPx + delta).coerceIn(-toolbarHeightPx, 0f)
+
+                consumed
             }
         )
     }
@@ -161,98 +130,123 @@ fun DashboardScreen(
     Scaffold(
         modifier = Modifier.nestedScroll(nestedScrollConnection),
         containerColor = MaterialTheme.colorScheme.background,
-        contentWindowInsets = WindowInsets(0, 0, 0, 0) // Disable default insets
+        contentWindowInsets = WindowInsets(0, 0, 0, 0) // Disable default insets for full manual control
     ) { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.background),
-                contentPadding = PaddingValues(top = toolbarHeight), // Content starts below toolbar
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                itemsIndexed(
-                    items = state.items,
-                    key = { _, id -> id }
-                ) { index, id ->
-                    if (index >= state.items.size - 1 && !state.isLoading && !state.endReached) {
-                        viewModel.loadNextItems()
-                    }
-                    ContentCard(id)
-                    Spacer(modifier = Modifier.height(16.dp))
+            if (state.isPermissionDenied) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    PermissionDeniedContent(onOpenSettings = {
+                        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                            data = Uri.fromParts("package", context.packageName, null)
+                        }
+                        context.startActivity(intent)
+                    })
                 }
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.background),
+                    // Padding content so it starts below the fully assembled top bar
+                    contentPadding = PaddingValues(
+                        top = toolbarHeight + statusBarHeight + extraTopPadding,
+                        bottom = 16.dp
+                    ),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
 
-                if (state.isLoading) {
-                    item {
-                        CircularProgressIndicator(
-                            modifier = Modifier
-                                .padding(16.dp)
-                                .size(32.dp),
-                            strokeWidth = 3.dp,
-                            color = MaterialTheme.colorScheme.primary
-                        )
+                    itemsIndexed(
+                        items = state.items,
+                        key = { _, id -> id }
+                    ) { index, id ->
+                        if (index >= state.items.size - 1 && !state.isLoading && !state.endReached) {
+                            viewModel.loadNextItems()
+                        }
+                        ContentCard(id)
+                        Spacer(modifier = Modifier.height(16.dp))
                     }
-                }
-                
-                if (state.endReached && state.items.isNotEmpty()) {
-                    item {
-                        Text(
-                            text = "You've seen all posts",
-                            modifier = Modifier.padding(16.dp),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color.Gray
-                        )
+
+                    if (state.isLoading) {
+                        item {
+                            CircularProgressIndicator(
+                                modifier = Modifier
+                                    .padding(16.dp)
+                                    .size(32.dp),
+                                strokeWidth = 3.dp,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+
+                    if (state.endReached && state.items.isNotEmpty()) {
+                        item {
+                            Text(
+                                text = "You've seen all posts",
+                                modifier = Modifier.padding(16.dp),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color.Gray
+                            )
+                        }
                     }
                 }
             }
 
-            // TopAppBar as overlay with manual offset control
-            TopAppBar(
+            // Toolbar Assembly: Background + Status Bar Safe Area + Extra Margin + TopAppBar
+            Column(
                 modifier = Modifier
-                    .height(toolbarHeight)
-                    .offset { IntOffset(x = 0, y = toolbarOffsetHeightPx.roundToInt()) },
-                windowInsets = WindowInsets(0, 0, 0, 0), // Crucial: Remove internal M3 insets
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                    titleContentColor = Color.Black,
-                    actionIconContentColor = Color.Black
-                ),
-                title = {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(Color.Transparent),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Absolute.SpaceBetween,
-                    ) {
-                        Icon(
-                            Icons.Default.Add,
-                            contentDescription = "Add Content",
-                            tint = Color.Black,
-                            modifier = Modifier.size(30.dp)
-                        )
-
-                        Text(
-                            "Instagram",
-                            color = MaterialTheme.colorScheme.scrim,
-                            style = MaterialTheme.typography.titleLarge
-                        )
-
-                        IconButton(onClick = onNavigateToSettings) {
+                    .fillMaxWidth()
+                    .offset { IntOffset(x = 0, y = toolbarOffsetHeightPx.roundToInt()) }
+                    .background(MaterialTheme.colorScheme.background)
+            ) {
+                // Ensure background covers status bar area
+                Spacer(Modifier.windowInsetsTopHeight(WindowInsets.statusBars))
+                // Requested margin from top
+                Spacer(Modifier.height(extraTopPadding))
+                TopAppBar(
+                    modifier = Modifier.height(toolbarHeight),
+                    windowInsets = WindowInsets(0, 0, 0, 0), // Handled by container padding
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.Transparent,
+                        titleContentColor = Color.Black,
+                        actionIconContentColor = Color.Black
+                    ),
+                    title = {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(Color.Transparent),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Absolute.SpaceBetween,
+                        ) {
                             Icon(
-                                Icons.Default.FavoriteBorder,
-                                contentDescription = "notification",
+                                Icons.Default.Add,
+                                contentDescription = "Add Content",
                                 tint = Color.Black,
-                                modifier = Modifier.size(25.dp)
+                                modifier = Modifier.size(30.dp)
                             )
+
+                            Text(
+                                "Instagram",
+                                color = MaterialTheme.colorScheme.scrim,
+                                style = MaterialTheme.typography.titleLarge
+                            )
+
+                            IconButton(onClick = onNavigateToSettings) {
+                                Icon(
+                                    Icons.Default.FavoriteBorder,
+                                    contentDescription = "notification",
+                                    tint = Color.Black,
+                                    modifier = Modifier.size(25.dp)
+                                )
+                            }
                         }
-                    }
-                },
-            )
+                    },
+                )
+            }
         }
     }
 }
