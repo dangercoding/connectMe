@@ -50,14 +50,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
-import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.social.connectMe.core.components.GenericScrollConnection
@@ -92,9 +89,9 @@ fun DashboardScreen(
         }
     )
 
-    // Manual toolbar setup with status bar awareness and reduced breathing room
-    val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
-    val extraTopPadding = 8.dp // Reduced gap from top notch area
+    // Manual toolbar setup with status bar awareness and tighter breathing room
+    val statusBarHeight = WindowInsets.statusBars.asPaddingValues(density).calculateTopPadding()
+    val extraTopPadding = 4.dp // Minimized gap from notch area as requested
     val toolbarHeight = 64.dp
     
     // Total height of the top assembly that needs to hide fully (Bar + Safe Area + Margin)
@@ -115,14 +112,14 @@ fun DashboardScreen(
                 
                 // Coerce offset within [-totalHeight, 0] to ensure the entire top area can hide
                 toolbarOffsetHeightPx = newOffset.coerceIn(-totalToolbarHeightPx, 0f)
-                val consumed = toolbarOffsetHeightPx - oldOffset
 
                 // Trigger pagination logic if scrolling down significantly
                 if (delta < -10f && !state.isLoading && !state.endReached) {
                     viewModel.loadNextItems()
                 }
 
-                consumed
+                // Return 0f so the list scrolls simultaneously with the toolbar hiding ("not first")
+                0f
             }
         )
     }
@@ -202,7 +199,7 @@ fun DashboardScreen(
                     .offset { IntOffset(x = 0, y = toolbarOffsetHeightPx.roundToInt()) }
                     .background(MaterialTheme.colorScheme.background)
             ) {
-                // Ensure background covers status bar area
+                // Background covers status bar area
                 Spacer(Modifier.windowInsetsTopHeight(WindowInsets.statusBars))
                 // Requested margin from top
                 Spacer(Modifier.height(extraTopPadding))
