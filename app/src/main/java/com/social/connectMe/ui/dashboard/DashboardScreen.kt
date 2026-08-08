@@ -13,12 +13,14 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
@@ -48,6 +50,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
@@ -71,8 +74,9 @@ fun DashboardScreen(
     val context = LocalContext.current
     val density = LocalDensity.current
 
-    // Flag to ensure the toast message is shown only once per session
-    var hasShownScrollToast by rememberSaveable { mutableStateOf(false) }
+    // Separate flags to ensure both "Scrolled" and "Stopped" toasts are shown exactly once
+    var hasShownScrolledToast by rememberSaveable { mutableStateOf(false) }
+    var hasShownStoppedToast by rememberSaveable { mutableStateOf(false) }
 
     PermissionHandler(
         permissions = arrayOf(
@@ -89,8 +93,8 @@ fun DashboardScreen(
     )
 
     // Manual toolbar setup with status bar awareness and tighter breathing room
-    val statusBarHeight = WindowInsets.statusBars.asPaddingValues(density).calculateTopPadding()
-    val extraTopPadding = 4.dp // Minimized gap from notch area as requested
+    val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val extraTopPadding = 8.dp // Balanced gap from notch area
     val toolbarHeight = 64.dp
     
     // Total height of the top assembly that needs to hide fully (Bar + Safe Area + Margin)
@@ -100,12 +104,12 @@ fun DashboardScreen(
     val nestedScrollConnection = remember(totalToolbarHeightPx) {
         GenericScrollConnection(
             onScrollStarted = {
-                if (!hasShownScrollToast) {
+                if (!hasShownScrolledToast) {
                     Toast.makeText(context, "Scrolled", Toast.LENGTH_SHORT).show()
-                    hasShownScrollToast = true
+                    hasShownScrolledToast = true
                 }
             },
-            onScroll = { delta: Float ->
+            onScroll = { delta ->
                 val oldOffset = toolbarOffsetHeightPx
                 val newOffset = oldOffset + delta
                 
@@ -119,6 +123,12 @@ fun DashboardScreen(
 
                 // Return 0f so the list scrolls simultaneously with the toolbar hiding ("not first")
                 0f
+            },
+            onScrollStopped = {
+                if (!hasShownStoppedToast) {
+                    Toast.makeText(context, "Stopped", Toast.LENGTH_SHORT).show()
+                    hasShownStoppedToast = true
+                }
             }
         )
     }
@@ -126,13 +136,12 @@ fun DashboardScreen(
     Scaffold(
         modifier = Modifier.nestedScroll(nestedScrollConnection),
         containerColor = MaterialTheme.colorScheme.background,
-        contentWindowInsets = WindowInsets(0, 0, 0, WindowInsets.navigationBars.getBottom(density)) // Disable default insets for full manual control
+        contentWindowInsets = WindowInsets.navigationBars.only(WindowInsetsSides.Bottom) // Corrected: Use standard inset logic
     ) { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-
         ) {
             if (state.isPermissionDenied) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -201,11 +210,11 @@ fun DashboardScreen(
             ) {
                 // Background covers status bar area
                 Spacer(Modifier.windowInsetsTopHeight(WindowInsets.statusBars))
-                // Requested margin from top
+                // Minimal margin from top
                 Spacer(Modifier.height(extraTopPadding))
                 TopAppBar(
                     modifier = Modifier.height(toolbarHeight),
-                    windowInsets = WindowInsets(0, 0, 0, 0), // Handled by container padding
+                    windowInsets = WindowInsets(0.dp, 0.dp, 0.dp, 0.dp), // Handled by container padding
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = Color.Transparent,
                         titleContentColor = Color.Black,
