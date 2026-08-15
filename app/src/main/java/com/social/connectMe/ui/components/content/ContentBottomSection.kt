@@ -1,17 +1,10 @@
 package com.social.connectMe.ui.components.content
 
-import android.Manifest
-import android.os.Build
 import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Snackbar
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -24,7 +17,7 @@ import com.social.connectMe.ui.components.buttons.ButtonWithLabel
 fun ContentBottomSection(
     id: Int
 ) {
-val context = LocalContext.current
+    val context = LocalContext.current
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -36,16 +29,23 @@ val context = LocalContext.current
                 "4",
                 painterResource(R.drawable.like_outline_button),
                 onClick = { value ->
-                   Toast.makeText(context, "Liked", Toast.LENGTH_SHORT).show()
-                })
+                    Toast.makeText(context, "Liked", Toast.LENGTH_SHORT).show()
+                },
+                isRow = true,
+                iconSize = 40.dp
+            )
             ButtonWithLabel(
                 "14", painterResource(R.drawable.comment_outline_button), onClick = { value ->
 
-                })
+                }, isRow = true,
+                iconSize = 40.dp
+            )
             ButtonWithLabel(
                 "150", painterResource(R.drawable.like_outline_button), onClick = { value ->
 
-                })
+                }, isRow = true,
+                iconSize = 40.dp
+            )
         }
 
         ContentComment(
